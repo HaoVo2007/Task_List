@@ -11,3 +11,7 @@ Route::get('/user', function (Request $request) {
 Route::apiResource('task', TaskController::class);
 
 Route::put('task/{id}/toggle-completion', [TaskController::class, 'taskCompleted']);
+
+Route::get('/reminder', [TaskController::class, 'reminderTask']);
+
+Route::get('/check-notification/{id}', [TaskController::class, 'checkNotification']);

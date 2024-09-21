@@ -18,7 +18,7 @@
                         </div>
 
                         <div class="form-group mb-3">
-                            <label for="exampleFormControlSelect1" class="col-form-label">Category Task : </label>
+                            <label for="exampleFormControlSelect1" class="col-form-label">Category task : </label>
                             <select class="form-control" id="category-task">
                                 <option value="<i class=&quot;fas fa-book-open fa-lg&quot;></i>">Education</option>
 
@@ -43,6 +43,12 @@
 
                             </select>
                         </div>
+
+                        <div class="mb-3">
+                            <label for="dueDateTime" class="form-label">Deadline task : </label>
+                            <input type="datetime-local" class="form-control" id="due-date-time" name="dueDateTime">
+                        </div>
+
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -52,6 +58,24 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="reminderModal" tabindex="-1" aria-labelledby="reminderModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reminderModalLabel">Task Reminder</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="reminder-body">
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <section class="vh-100 gradient-custom-2">
         <div class="container py-5 h-100">
             <div class="row d-flex justify-content-center align-items-center h-100">
@@ -60,18 +84,36 @@
                         <div class="card-body p-4 text-white">
                             <div class="text-center pt-3 pb-2">
                                 <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-todo-list/check1.webp"
-                                  alt="Check" width="60">
+                                    alt="Check" width="60">
                                 <h2 class="my-4">Task List</h2>
                             </div>
-                            <button type="button" id="btn-new-task" class="btn btn-primary mb-3" data-bs-toggle="modal"
-                            data-bs-target="#exampleModal">NewTask</button>
+                            <div class="d-flex mb-3 justify-content-between align-items-center">
+                                <div class="reminder-icon" id="reminder-icon">
+                                    <i class="fas fa-bell fa-lg"></i>
+                                    <span class="badge bg-danger" id="reminder-count">0</span>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <div class="filter-container d-flex gap-2">
+                                        <button type="button" id="filter" class="btn btn-primary">Filter</button>
+                                        <select class="form-select" id="filter-type" aria-label="Default select example">
+                                            <option selected>Open this select menu</option>
+                                            <option value="0">Uncompleted</option>
+                                            <option value="1">Completed</option>
+                                            <option value="2">Priority level</option>
+                                        </select>
+                                    </div>
+                                    <button type="button" id="btn-new-task" class="btn btn-primary"
+                                        data-bs-toggle="modal" data-bs-target="#exampleModal">New Task</button>
+                                </div>
+                            </div>
+
                             <table class="table text-white mb-0">
                                 <thead>
                                     <tr>
-                                      <th scope="col">Category Task</th>
-                                      <th scope="col">Task</th>
-                                      <th scope="col">Priority</th>
-                                      <th scope="col">Actions</th>
+                                        <th scope="col">Category Task</th>
+                                        <th scope="col">Task</th>
+                                        <th scope="col">Priority</th>
+                                        <th scope="col">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tasks-list"></tbody>
@@ -87,11 +129,14 @@
 
 @section('session-content')
     <script>
-        function fetchTasks(page = 1) {
+        function fetchTasks(page, type) {
             $.ajax({
                 url: 'api/task?page=' + page,
                 type: 'GET',
                 dataType: 'json',
+                data: {
+                    filter_type: type
+                },
                 success: function(response) {
                     var tasksList = $('#tasks-list');
                     tasksList.empty();
@@ -198,16 +243,17 @@
 
                     // Xử lý khi người dùng nhấn vào số trang
                     $('.page-link').on('click', function(e) {
+                        var selectedType = $('#filter-type').val();
                         e.preventDefault();
                         var selectedPage = $(this).data('page');
-                        fetchTasks(selectedPage); // Gọi lại hàm fetchTasks với trang đã chọn
+                        fetchTasks(selectedPage,
+                            selectedType); // Gọi lại hàm fetchTasks với trang đã chọn
                     });
-                    
+
                     $('.task-checkbox').on('click', function() {
                         var taskId = $(this).data('task-id');
                         changeComplete(taskId, currentPage);
                     })
-
                 },
                 error: function(xhr, status, error) {
                     swal("Something Went Wrong", "", "error");
@@ -278,12 +324,13 @@
         }
 
         function changeComplete(taskId, page) {
+            var selectedType = $('#filter-type').val();
             $.ajax({
                 url: 'api/task/' + taskId + '/toggle-completion',
                 type: 'PUT',
                 success: function(response) {
                     swal(response.message, "", "success");
-                    fetchTasks(page);
+                    fetchTasks(page, selectedType);
                 },
                 error: function(xhr, status, error) {
                     swal("Something went wrong", "", "error");
@@ -292,7 +339,66 @@
         }
 
         $(document).ready(function() {
-            fetchTasks(page = 1);
+            fetchTasks(1, type = 'null');
+
+            $('#reminder-icon').on('click', function() {
+                $('#reminderModal').modal('show');
+            });
+
+            fetchReminders();
+
+            setInterval(fetchReminders, 10000000);
+
+            function fetchReminders() {
+                $.ajax({
+                    url: 'api/reminder',
+                    method: 'GET',
+                    success: function(response) {
+                        if (response.data.length > 0) {
+                            let unreadReminders = response.data.filter(task => task.check_notification === 0);
+                            $('#reminder-count').text(unreadReminders.length).show();
+                            $('#reminder-icon').off('click').on('click', function() {
+                                let reminderHtml = '';
+                                response.data.forEach(function(task) {
+                                    reminderHtml += `<p class="${task.check_notification === 0 ? 'check-notification' : 'notification'}" data-task-id="${task.id}"><strong>${task.task}</strong>: ${task.deadline}</p>`;
+                                });
+                                $('#reminder-body').html(reminderHtml);
+                                $('#reminderModal').modal('show');
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error fetching reminders:", error);
+                    }
+                });
+            }
+
+            $(document).on('click', '.check-notification', function() {
+                var taskId = $(this).data('task-id');
+                var notificationElement = $(this);
+                console.log(notificationElement);
+                $.ajax({
+                    url: 'api/check-notification/' + taskId,
+                    type: 'GET',
+                    success: function(response) {
+                        console.log(response);
+                        if (response.status == 'sucesss') {
+                            console.log(1);
+                            notificationElement.css('background', 'white');
+                        } else if (response.status === 'already_checked') {
+                            console.log('Notification already checked');
+                        }
+                    },
+                    error: function(error) {
+                        console.error('Error:', error);
+                    }
+                });
+            });
+
+            $('#filter').on('click', function() {
+                var selectedType = $('#filter-type').val();
+                fetchTasks(1, selectedType); // Fetch tasks with selected filter
+            });
 
             $('#btn-new-task').on('click', function() {
                 $('#task_id').val('');
@@ -305,6 +411,7 @@
                 const task = $('#task').val();
                 const category_task = $('#category-task').val();
                 const priority_level = $('#priority-level').val();
+                const deadline_time = $('#due-date-time').val();
                 $.ajax({
                     url: 'api/task',
                     type: 'POST',
@@ -313,6 +420,7 @@
                         task: task,
                         category: category_task,
                         priority: priority_level,
+                        deadline: deadline_time,
                     }),
 
                     success: function(response) {

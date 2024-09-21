@@ -11,6 +11,10 @@ class Task extends Model
         'task',
         'category',
         'priority',
+        'deadline',
+        'reminder',
+        'check_notification',
     ];
+    
     use HasFactory;
 }

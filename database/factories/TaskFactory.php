@@ -16,11 +16,20 @@ class TaskFactory extends Factory
      */
     public function definition(): array
     {
+        $icons = [
+            '<i class="fas fa-book-open fa-lg"></i>', 
+            '<i class="fas fa-dumbbell fa-lg"></i>',   
+            '<i class="fas fa-paint-brush fa-lg"></i>', 
+            '<i class="fas fa-hands-helping fa-lg"></i>', 
+            '<i class="fas fa-user-tie fa-lg"></i>'     
+        ];
+
         return [
-            'title' => fake()->sentence(),
-            'description' => fake()->paragraph(),
-            'long_description' => fake()->paragraph(7, true),
+            'task' => fake()->sentence(),
+            'priority' => fake()->randomElement([0, 1, 2]),
             'complete' => fake()->boolean(),
+            'category' => fake()->randomElement($icons), 
         ];
     }
+
 }

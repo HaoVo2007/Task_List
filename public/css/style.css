@@ -61,4 +61,32 @@
     text-align: center; /* Căn giữa theo trục ngang */
     vertical-align: middle; /* Căn giữa theo trục dọc */
     height: 50px; /* Đảm bảo chiều cao của thẻ th đủ lớn để thấy rõ sự căn giữa */
-}
+  }
+
+  div#reminder-icon {
+    position: relative;
+  }
+
+  span#reminder-count {
+    position: absolute;
+    top: -15px;
+    right: -20px;
+    left: 15px;
+  }
+
+  p.check-notification {
+    padding: 10px;
+    margin: 10px 0px;
+    background: gray;
+    border-bottom: 1px solid #333;
+    border-radius: 10px;
+  }
+
+  p.notification {
+    padding: 10px;
+    margin: 0px;
+    background: white;
+    margin: 10px 0px;
+    border-bottom: 1px solid #333;
+    border-radius: 10px;
+  }

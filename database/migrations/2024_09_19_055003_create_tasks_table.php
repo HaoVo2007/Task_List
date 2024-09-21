@@ -17,6 +17,9 @@ return new class extends Migration
             $table->string('category');
             $table->text('priority')->nullable();
             $table->boolean('complete')->default(false);
+            $table->dateTime('deadline');
+            $table->dateTime('reminder');
+            $table->boolean('check_notification')->default(false);
             $table->timestamps();
         });
     }
