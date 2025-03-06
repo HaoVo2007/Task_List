@@ -29,6 +29,8 @@ class TaskFactory extends Factory
             'priority' => fake()->randomElement([0, 1, 2]),
             'complete' => fake()->boolean(),
             'category' => fake()->randomElement($icons), 
+            'deadline' => $deadline = fake()->dateTimeBetween('now', '+2 day'), 
+            'reminder' => (clone $deadline)->modify('-2 hours'),
         ];
     }
 

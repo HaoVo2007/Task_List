@@ -193,26 +193,6 @@
                         showModal(taskId);
                     });
 
-                    $('.task-delete').on('click', function(e) {
-                        e.preventDefault();
-                        var taskId = $(this).data('task-id');
-                        swal({
-                                title: "Are you sure?",
-                                text: "Once deleted, you will not be able to recover this imaginary file!",
-                                icon: "warning",
-                                buttons: true,
-                                dangerMode: true,
-                            })
-                            .then((willDelete) => {
-                                if (willDelete) {
-                                    deleteTask(taskId);
-                                    swal("Poof! Your imaginary file has been deleted!", {
-                                        icon: "success",
-                                    });
-                                }
-                            });
-                    })
-
                     var pagination = $('#pagination');
                     pagination.empty();
 
@@ -253,6 +233,26 @@
                     $('.task-checkbox').on('click', function() {
                         var taskId = $(this).data('task-id');
                         changeComplete(taskId, currentPage);
+                    })
+
+                    $('.task-delete').on('click', function(e) {
+                        e.preventDefault();
+                        var taskId = $(this).data('task-id');
+                        swal({
+                                title: "Are you sure?",
+                                text: "Once deleted, you will not be able to recover this imaginary file!",
+                                icon: "warning",
+                                buttons: true,
+                                dangerMode: true,
+                            })
+                            .then((willDelete) => {
+                                if (willDelete) {
+                                    deleteTask(taskId, currentPage);
+                                    swal("Poof! Your imaginary file has been deleted!", {
+                                        icon: "success",
+                                    });
+                                }
+                            });
                     })
                 },
                 error: function(xhr, status, error) {
@@ -308,14 +308,15 @@
             })
         }
 
-        function deleteTask(taskId) {
+        function deleteTask(taskId, page) {
+            var selectedType = $('#filter-type').val();
             $.ajax({
                 url: 'api/task/' + taskId,
                 type: 'DELETE',
                 dataType: 'json',
                 success: function(response) {
                     swal(response.message, "", response.status);
-                    fetchTasks()
+                    fetchTasks(page, selectedType);
                 },
                 error: function(xhr, status, error) {
                     swal("Something Went Wrong", "", "error");
